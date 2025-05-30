@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
+  name          String
+  password      String
+  role          Role         @default(USER)
+  points        Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  submissions   Submission[]
+  completedChallenges Challenge[] @relation("CompletedChallenges")
+}
+
+model Challenge {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String
+  difficulty  Difficulty
+  category    Category
+  points      Int
+  flag        String
+  hints       String      // Store as JSON string
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  submissions Submission[]
+  completedBy User[]      @relation("CompletedChallenges")
+
+  @@unique([title, category], name: "title_category")
+}
+
+model Submission {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  challengeId Int
+  status      Status
+  flag        String
+  points      Int
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+  CORRECT
+  INCORRECT
+  PENDING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  INSANE
+}
+
+enum Category {
+  WEB
+  CRYPTO
+  FORENSICS
+  REVERSE
+  PWN
+  MISC
+}
